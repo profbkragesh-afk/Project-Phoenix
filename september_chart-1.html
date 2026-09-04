@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>September Chart</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;margin:15px;background:#f4f6f8}
+h1{text-align:center;color:#2c3e50;font-size:28px}
+.table-container{overflow:auto;max-width:100%;border:2px solid #ccc;background:#fff}
+table{border-collapse:collapse;border-spacing:0;margin:0;width:100%;min-width:1800px;font-size:18px}
+th,td{border:1px solid #b0bec5;padding:10px;text-align:center}
+th{background:#1976d2;color:#fff;font-size:20px;position:sticky;top:0;z-index:1}
+.sticky-col-1{position:sticky;left:0;background:#e3f2fd;z-index:4;width:50px;min-width:50px;max-width:50px;padding-left:6px;padding-right:6px}
+.sticky-col-2{position:sticky;left:50px;background:#e3f2fd;z-index:4;width:100px;min-width:100px;max-width:100px;padding-left:5px;padding-right:5px;text-align:left;white-space:normal;overflow-wrap:break-word;word-break:normal}
+th.sticky-col-1,th.sticky-col-2{background:#1565c0;z-index:5}
+input[type=text]{width:100%;font-size:18px;padding:6px;border:1px solid #90caf9;text-align:center} textarea.name-input{width:100%;min-height:72px;font-size:18px;padding:6px;border:1px solid #90caf9;text-align:left;font-weight:bold;white-space:pre-wrap;overflow:hidden;resize:none;line-height:1.25}
+.name-input{text-align:left;font-weight:bold}
+.btn-toggle{font-size:16px;font-weight:bold;padding:8px 12px;margin:2px;cursor:pointer;border:0;border-radius:4px}
+.btn-ok{background:#2e7d32;color:#fff}
+.btn-no{background:#c62828;color:#fff}
+.daily-total{background:#e8f5e9;font-weight:bold;font-size:20px;color:#2e7d32}.total-col{background:#fff9c4;font-weight:bold;font-size:22px;color:#2e7d32;width:100px}
+th.total-col{background:#fbc02d;color:#000}tfoot .sticky-col-1,tfoot .sticky-col-2{background:#e3f2fd;z-index:4}tfoot .daily-total{background:#e8f5e9}
+</style>
+</head>
+<body>
+<h1>September Chart</h1>
+<div class="table-container">
+<table id="chartTable">
+<thead><tr id="headerRow">
+<th class="sticky-col-1">Sl No</th>
+<th class="sticky-col-2">Name</th>
+<th class="total-col">Total OK</th>
+</tr></thead>
+<tbody id="tableBody"></tbody>
+<tfoot><tr id="dailyTotalRow">
+<td class="sticky-col-1"><b></b></td>
+<td class="sticky-col-2"><b>Daily Total</b></td>
+</tr></tfoot>
+</table>
+</div>
+<script>
+const START_DAY=5, END_DAY=31, TOTAL_ROWS=20;
+const headerRow=document.getElementById('headerRow');
+for(let day=START_DAY;day<=END_DAY;day++){
+ const th=document.createElement('th'); th.textContent=day;
+ headerRow.insertBefore(th,headerRow.lastElementChild);
+}
+const tbody=document.getElementById('tableBody');
+for(let i=1;i<=TOTAL_ROWS;i++){
+ const tr=document.createElement('tr');
+ tr.innerHTML=`<td class="sticky-col-1"><b>${i}</b></td>
+ <td class="sticky-col-2"><textarea class="name-input" placeholder="Enter Name" rows="3"></textarea></td>`;
+ for(let day=START_DAY;day<=END_DAY;day++){
+  const td=document.createElement('td');
+  td.innerHTML=`<input type="text" class="cell-input">
+  <div style="margin-top:4px">
+  <button class="btn-toggle btn-ok">OK</button>
+  <button class="btn-toggle btn-no">NO</button></div>`;
+  const input=td.querySelector('.cell-input');
+  td.querySelector('.btn-ok').onclick=()=>{input.value='OK';calculateTotals(i)};
+  td.querySelector('.btn-no').onclick=()=>{input.value='NO';calculateTotals(i)};
+  input.addEventListener('input',()=>calculateTotals(i));
+  tr.appendChild(td);
+ }
+ const total=document.createElement('td');
+ total.className='total-col'; total.id='total-'+i; total.textContent='0';
+ tr.appendChild(total); tbody.appendChild(tr);
+}
+const dailyTotalRow = document.getElementById('dailyTotalRow');
+for(let day=START_DAY;day<=END_DAY;day++){
+ const td=document.createElement('td');
+ td.className='daily-total';
+ td.id='daily-total-'+day;
+ td.textContent='0';
+ dailyTotalRow.appendChild(td);
+}
+const dailyGrandTotal=document.createElement('td');
+dailyGrandTotal.className='total-col';
+dailyGrandTotal.id='daily-total-grand';
+dailyGrandTotal.textContent='0';
+dailyTotalRow.appendChild(dailyGrandTotal);
+
+function calculateDailyTotals(){
+ let grand=0;
+ for(let day=START_DAY;day<=END_DAY;day++){
+  let count=0;
+  document.querySelectorAll('#tableBody tr').forEach(row=>{
+   const inputs=row.querySelectorAll('.cell-input');
+   const idx=day-START_DAY;
+   if(inputs[idx] && inputs[idx].value.replace(/[^a-zA-Z]/g,'').toLowerCase()==='ok') count++;
+  });
+  document.getElementById('daily-total-'+day).textContent=count;
+  grand+=count;
+ }
+ document.getElementById('daily-total-grand').textContent=grand;
+}
+function calculateTotals(rowIndex){
+ const row=document.getElementById('total-'+rowIndex).parentElement;
+ let okCount=0;
+ row.querySelectorAll('.cell-input').forEach(input=>{
+  const clean=input.value.replace(/[^a-zA-Z]/g,'');
+  if(clean.toLowerCase()==='ok') okCount++;
+ });
+ document.getElementById('total-'+rowIndex).textContent=okCount;
+ calculateDailyTotals();
+}
+calculateDailyTotals();
+</script>
+</body>
+</html>
